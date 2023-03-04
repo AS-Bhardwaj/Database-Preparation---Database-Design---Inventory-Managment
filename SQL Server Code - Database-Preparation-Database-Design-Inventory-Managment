@@ -1,0 +1,413 @@
+
+--Create tables in our database.
+--As we are making our project on Inventory Managment,
+--So, we will be creating some tables like 
+--store, brands, categories, customer_cart, inv_user, product, provides, select_product
+
+--store table will be holding 4 columns which will be storing info regarding that store.
+--brands table will be containing 2 column bid and bname, which contains brand id and brand names.
+--categories will contain the categories of products and columns will be cid and category_name.
+--customer_cart table will contain the products that are added by customer in the cart.
+--inv_user table contains all the details of our users/customers columns - cust_id,user_id,name,password,last_login,user_type.
+--product table contains the details of all the product in our inventory.
+--provide table contains the discount provided by a store on products of a brand
+--transaction table contains all the transaction details like transaction_id, total_amt,paid,due,gst,payment_method,cust_id.
+--we will not be inputing the value inside transaction because thisproject is about inventory managment and we don't need transaction here.
+
+--after creating our tables , we will insert values in it.
+--we will be using foreign key for linking the tables.
+
+--Database Design - 
+	--Whenever any product will be added into the cart by any customer it will be automatically reduced from our stock of that product.
+	--Automatically Generates Alert notificiation if stock of any product get's less than 2
+
+--Functions Created - 
+	--fn_get_stock_by_category_name(@category_name varchar(100))
+	--fn_get_customer_details(@customer_id numeric(5))
+
+--After that we have done some Data Analysis Task by answering some questions from the database.
+	--Q1  How many input(product) do we have in total?
+	--Q2  Which product is ordered the most?
+	--Q4  Which category of product is ordered the most?
+	--Q4  What is the total sales till now?
+	--Q5  Find customers detail by input(name)
+	--Q6  Find which customers purchases for most amount from the store.
+
+--LET'S START
+
+--Creating table stores.
+
+create table stores(
+sid numeric (5) not null,
+sname varchar(100),
+address varchar(150),
+mobno char(10)
+);
+
+--we will use sid as primary key, so let's add it as primary key using constraint.
+
+alter table stores
+add constraint pk_stores_sid primary key clustered(sid)
+
+--creating table brands
+
+create table brands1(
+bid1 numeric(5) not null,
+bname varchar(100)
+);
+
+--adding bid as primary key
+
+alter table brands1
+add constraint pk_brands_bid1 primary key clustered(bid1);
+
+--adding table inv_user
+
+create table inv_user(
+cust_id numeric(5) not null,
+user_id varchar(100) not null,
+name varchar(100),
+password varchar(100),
+last_login timestamp,
+user_type varchar(100)
+);
+
+--adding cust_id as primary key
+
+alter table inv_user
+add constraint pk_inv_user_user_id primary key clustered(cust_id);
+
+--creating table categories
+
+create table categories(
+cid numeric(5) not null,
+category_name varchar(100)
+);
+
+--adding cid as primary key
+
+alter table categories
+add constraint pk_categories_cid primary key clustered(cid);
+
+--creating table product
+--in product table we will be using 2 columns as foreign key,
+--cid - foreign key from categories table
+--bid1 - foreign key from brands table
+
+create table product(
+pid numeric(5) not null,
+cid numeric(5) not null,
+bid1 numeric(5) not null,
+sid numeric(5),
+pname varchar(100),
+p_stock numeric(5),
+price numeric(5),
+added_date date,
+constraint fk_categories foreign key (cid) references [inventory database].dbo.categories(cid),
+constraint fk_brands1 foreign key (bid1) references brands1(bid1)
+);
+
+--adding pid as primary key
+
+alter table .product
+add constraint pk_product_pid primary key clustered(pid)
+
+--adding sid as primary key to product table is also a better idea
+
+alter table product
+add constraint fk_stores foreign key (sid) references stores(sid);
+
+--creating table provides
+--in provides table we will be using 2 foreign keys,
+--bid1 - foreign key from brands table
+--sid - foreign key from stores table
+
+create table provides(
+bid numeric(5) not null,
+sid numeric(5) not null,
+constraint fk1_brands1 foreign key (bid) references brands1(bid1),
+constraint fk1_stores foreign key (sid) references stores(sid),
+discount varchar(5)
+);
+
+--creating table customer_cart
+
+create table customer_cart(
+cart_id numeric(5) primary key not null,
+name varchar(100),
+mobno char(10)
+);
+
+--creating table select_product
+--in this table we will be using 2 foreign keys,
+--cart_id - foreign key, from customer_cart table
+--pid - foreign ky, from product table
+
+create table select_product(
+cust_id numeric(5) not null,
+pid numeric(5) not null,
+quantity numeric(4),
+constraint fk1_customer_cart foreign key (cust_id) references customer_cart(cart_id),
+constraint fk_product foreign key (pid) references product(pid)
+);
+
+--creating table transactions
+--in this table we, will be using 2 foreign keys,
+--cust_id - foreign key, from inv_user table
+--cart_id - foreign key, from customer_cart table
+
+create table transactions(
+transaction_id numeric(5) primary key,
+total_amount numeric(10),
+paid numeric(5),
+due numeric(5),
+gst char(15),
+discount numeric(5),
+payment_method varchar(100),
+cust_id numeric(5) not null,
+constraint fk2_inv_user foreign key (cust_id) references inv_user(cust_id)
+constraint fk2_customer_cart foreign key (cart_id) references customer_cart(cart_id)
+);
+
+--creating table invoices
+--in this table we will be using transaction_id as foreign key from transactions table
+
+create table invoices(
+item_no numeric(5),
+product_name varchar(100),
+quantity numeric(5),
+net_price numeric(5),
+transaction_id numeric(5) not null,
+constraint fk_transactions foreign key (transaction_id) references transactions(transaction_id)
+);
+
+
+--Now we will insert values in our tables
+
+
+insert into brands1(bid1,bname)
+values
+	(1,'samsung'),
+	(2,'lg'),
+	(3,'haeir'),
+	(4,'whirlpool'),
+	(5, 'voltas'),
+	(6, 'sony');
+	
+insert into categories(cid, category_name)
+values 
+	(1,'referigerator'),
+	(2,'washing machine'),
+	(3,'led tv'),
+	(4,'ac'),
+	(5,'cooler');
+
+insert into inv_user(cust_id,user_id, name, password, last_login, user_type)
+values
+	(1,'asb87@gmail.com','Amit','amitsharma', default,'old-regular'),
+	(2,'shubhamsharma@gmail.com','shubham','shubhamsharma',default,'old-regular'),
+	(3,'sahilsharma@gmail.com','sahil','sahilsharma',default,'old-irregular'),
+	(4,'jatinsingh@gmail.com','jatin','jatinsingh',default,'old-regular'),
+	(5,'manjeetkohar@gmail.com','manjeet','manjeetkohar',default,'new'),
+	(6,'amandeep@gmail.com','amandeep','amandeepsheokand',default,'new');
+
+insert into stores(sid,sname,address,mobno)
+values
+	(1,'sharma electronics','near post office, railway road, jind','0000000000')
+
+insert into product(pid,cid,bid1,sid,pname,p_stock,price,added_date)
+values
+	(1,4,5,1,'voltas ac 1 ton',5,40000,'2022-12-01'),
+	(2,4,2,1,'lg ac 1 ton',7,45000,'2022-12-01'),
+	(3,1,1,1,'samsung 195L',2,16000,'2022-12-01'),
+	(4,1,1,1,'samsung 210L',2,20000,'2022-12-03'),
+	(5,1,1,1,'samsung 260L',2,30000,'2022-12-03'),
+	(6,1,2,1,'lg 195L',2,16500,'2022-12-03'),
+	(7,1,2,1,'lg 210L',2,21000,'2022-12-05'),
+	(8,1,2,1,'lg 260L',2,31000,'2022-12-05'),
+	(9,1,3,1,'haeir 195',2,13000,'2022-12-05'),
+	(10,1,3,1,'haeir 210L',5,17000,'2022-12-06'),
+	(11,1,3,1,'haeir 260L',5,25000,'2022-12-06'),
+	(12,1,4,1,'whirlpool 195L',5,15000,'2022-12-09'),
+	(13,1,4,1,'whirlpool 210L',5,19000,'2022-12-09'),
+	(14,1,4,1,'whirlpool 260L',5,28000,'2022-12-09'),
+	(15,2,2,1,'lg 7kg',8,12000,'2022-12-12'),
+	(16,2,2,1,'lg 7.5kg',8,16000,'2022-12-12'),
+	(17,2,2,1,'lg 8kg',10,18000,'2022-12-12'),
+	(18,2,1,1,'samsung 7kg',8,11000,'2022-12-15'),
+	(19,2,1,1,'samsung 7.5kg',8,15000,'2022-12-15'),
+	(20,2,1,1,'samsung 8kg',10,17000,'2022-12-15'),
+	(21,2,3,1,'haeir 7kg',8,10000,'2022-12-18'),
+	(22,2,3,1,'haeir 7.5kg',8,13000,'2022-12-18'),
+	(23,2,3,1,'haeir 8kg',10,15000,'2022-12-18'),
+	(24,2,6,1,'sony 32',8,26000,'2022-12-20'),
+	(25,2,6,1,'sony 42',8,36000,'2022-12-20'),
+	(26,2,6,1,'sony 52',10,44000,'2022-12-20'),
+	(27,2,1,1,'samsung 32',8,22000,'2022-12-22'),
+	(28,2,1,1,'ssamsung 42',8,28000,'2022-12-22'),
+	(29,2,1,1,'samsung 52',10,40000,'2022-12-22'),
+	(30,2,2,1,'lg 32',8,22000,'2022-12-24'),
+	(31,2,2,1,'lg 42',8,29000,'2022-12-24'),
+	(32,2,2,1,'lg 52',10,41000,'2022-12-24');
+
+update product
+set cid=3
+where added_date in ('2022-12-20','2022-12-22','2022-12-24');
+
+
+insert into customer_cart(cart_id,name,mobno)
+values
+	(1,'amit','981####900'),
+	(2,'shubham','893####191'),
+	(3,'sahil','999####960'),
+	(4,'jatin','701####254');
+
+insert into select_product(cust_id,pid,quantity)
+values
+	(1,1,2),
+	(1,5,1),
+	(1,17,1),
+	(1,26,2),
+	(2,2,2),
+	(2,3,1),
+	(2,20,1),
+	(2,32,2),
+	(3,1,1),
+	(3,7,1),
+	(3,20,1),
+	(3,23,1),
+	(4,2,1),
+	(4,7,1),
+	(4,15,2),
+	(4,25,1);
+
+insert into provides(bid,sid,discount)
+values
+	(1,1,15),
+	(2,1,12),
+	(3,1,18),
+	(4,1,10),
+	(5,1,22),
+	(6,1,10);
+
+
+--i think we should also add one more functionality to our database
+--if any customer add product in select_product than it will be automatically reduced from the pstock column in product table
+--for that we will need to create a trigger that will automatically run whenever any product will be added in select_product
+
+create trigger tr_update_stock_after_selling
+on select_product
+after insert
+as 
+begin	
+	declare @product_id numeric(5) 
+	declare @quantity_ordered numeric(4)
+	select @product_id=pid,@quantity_ordered=quantity from inserted
+	update product 
+	set p_stock=p_stock-@quantity_ordered
+	where pid=@product_id
+
+end;
+
+--let's create one more trigger
+--that will print Alert Notification whenever stock of any product will get less than 3.
+
+create trigger tr_stock_alert
+on product
+after delete
+as
+begin
+	declare @product_id numeric(5)
+	declare @product_name varchar(100)
+	declare @stock numeric(4)
+	select @product_id=pid, @product_name=pname, @stock=p_stock
+	from product
+	where p_stock<=2
+	print 'Alert: Stock of ' + @product_name + ' product id - ' + @product_id +' is really low, only' + cast(@stock as numeric(4)) + ' units are left.'
+end;
+
+drop trigger  tr_stock_alert
+--we have created and designed our database
+--now let's have a look at some of the tables in our database
+
+select * from brands1
+select * from categories
+select * from product 
+select * from customer_cart
+select * from select_product
+ 
+ --now let's do some analysis basis on our database
+ --we will be finding answer to some of the questions that might be important for the business
+
+--Q1  How many input(product) do we have in total?
+--Q2  Which product is ordered the most?
+--Q4  Which category of product is ordered the most?
+--Q4  What is the total sales till now?
+--Q5  Find customers detail by input(name)
+--Q6  Find which customers purchases for most amount from the store.
+
+--Q1.
+--Sol-
+
+select c.category_name, sum(p.p_stock) from categories c inner join product p on c.cid=p.cid
+group by c.category_name;
+
+create function fn_get_stock_by_category_name(@category_name varchar(100))
+returns table
+as
+return(
+	select c.category_name, sum(p.p_stock) as Stock
+	from categories c 
+	inner join product p on c.cid=p.cid
+	where category_name=@category_name
+	group by c.category_name
+	);
+
+select * from fn_get_stock_by_category_name('led tv')
+
+--Q2.
+--Sol: 
+
+select p.pname, sum(s.quantity) as units_sold from product p inner join select_product s on p.pid=s.pid
+group by p.pname
+order by units_sold desc;
+
+--Q3
+--Sol:
+select sum(s.quantity) as units_sold, c.category_name as category_name  from product p inner join select_product s on p.pid=s.pid
+inner join categories c on p.cid=c.cid
+group by p.cid, category_name
+order by units_sold desc;
+
+--Q4
+--Sol:
+select sum(Amount) as total_amount
+from(
+select sp.pid, p.pname, p.price, sp.quantity, p.price*sp.quantity as Amount  from select_product sp
+inner join product p
+on sp.pid=p.pid 
+) subquery
+
+--Q5
+--Sol:
+create function fn_get_customer_details(@customer_id numeric(5))
+returns table
+as
+return(
+	select * from inv_user as Customer_details
+	where cust_id = @customer_id
+);
+
+select* from fn_get_customer_details(1)
+
+--Q6
+--Sol
+select sp.cust_id, sum(p.price*sp.quantity) as Amount, u.name  from select_product sp
+inner join product p
+on sp.pid=p.pid 
+inner join inv_user u
+on sp.cust_id=u.cust_id
+group by sp.cust_id,u.name
+order by Amount desc
+
+
